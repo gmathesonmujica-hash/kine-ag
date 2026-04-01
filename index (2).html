@@ -285,15 +285,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--fg);min-hei
     <div class="login-title">Kinesiología A&amp;G</div>
     <div class="login-sub">Selecciona tu perfil</div>
     <div class="user-select-row">
-      <button class="user-btn sel" id="ubtn-gero" onclick="selectUser('Gero',this)">👤 Gero</button>
-      <button class="user-btn" id="ubtn-ale" onclick="selectUser('Alejandra',this)">👤 Alejandra</button>
+      <button class="user-btn sel" id="ubtn-gero">👤 Gero</button>
+      <button class="user-btn" id="ubtn-ale">👤 Alejandra</button>
     </div>
     <div class="login-field">
       <label>Contraseña</label>
-      <input class="login-input" type="password" id="login-pass" placeholder="Ingresa la contraseña" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password" />
+      <input class="login-input" type="password" id="login-pass" placeholder="Ingresa la contraseña"  autocomplete="current-password" />
       <div class="login-error" id="login-error"></div>
     </div>
-    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar</button>
+    <button class="login-btn" id="login-btn">Ingresar</button>
   </div>
 </div>
 
@@ -552,7 +552,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--fg);min-hei
 </div><!-- end app-wrapper -->
 <div class="toast" id="toast"></div>
 
-<script>
+<script type="text/javascript">
 // ══════ CONFIG ══════
 const SB_URL     = 'https://rizwvytcxobvrgfqzkpj.supabase.co'
 const SB_KEY     = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpend2eXRjeG9idnJnZnF6a3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNzI2MTcsImV4cCI6MjA5MDY0ODYxN30.VhIDEF2dZFCyPNmNF48VfP39m2gA3oCx_UCd_npBbII'
@@ -857,7 +857,7 @@ function renderPacientes() {
     const ageChip   = age!==null ? `<span class="age-chip">${age} años</span>` : ''
     const tipoBadge = `<span class="tipo-pac-badge ${p.tipo_pac||'particular'}">${p.tipo_pac==='derivado'?'🏥 Derivado':'👤 Particular'}</span>`
     const meta = [p.rut,p.tel,p.email,p.notes].filter(Boolean).join(' · ')||'Sin datos adicionales'
-    return `<div class="pat-item" onclick="openPatModal(`${p.id}`)">
+    return `<div class="pat-item" data-pid="${p.id}">
       <div style="min-width:0;flex:1">
         <div class="pat-name">${esc(p.name)}${ageChip}${tipoBadge}</div>
         <div class="pat-meta">${esc(meta)}</div>
@@ -865,8 +865,8 @@ function renderPacientes() {
         <div class="pat-count"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>${cnt} sesiones</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-        <button class="btn-edit-pat" onclick="event.stopPropagation();openEditModal(`${p.id}`)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button>
-        <button class="btn-ghost-del" onclick="event.stopPropagation();delPaciente(`${p.id}`)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+        <button class="btn-edit-pat" data-edit-id="${p.id}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button>
+        <button class="btn-ghost-del" data-del-id="${p.id}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
     </div>`
   }).join('')
@@ -1361,6 +1361,54 @@ function descargarFichaPDF() {
   doc.save('ficha_'+p.name.replace(/ /g,'_')+'.pdf')
   toast('📄 Ficha descargada')
 }
+
+
+// ══════ LOGIN EVENT LISTENERS ══════
+document.addEventListener('DOMContentLoaded', function() {
+  var loginBtn = document.getElementById('login-btn');
+  if (loginBtn) loginBtn.addEventListener('click', doLogin);
+  var loginPass = document.getElementById('login-pass');
+  if (loginPass) loginPass.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+  var ubtnGero = document.getElementById('ubtn-gero');
+  if (ubtnGero) ubtnGero.addEventListener('click', function(){ selectUser('Gero', this); });
+  var ubtnAle = document.getElementById('ubtn-ale');
+  if (ubtnAle) ubtnAle.addEventListener('click', function(){ selectUser('Alejandra', this); });
+
+  // Event delegation for patient list
+  document.addEventListener('click', function(e) {
+    var delBtn = e.target.closest('[data-del-id]');
+    if (delBtn) { e.stopPropagation(); delPaciente(delBtn.dataset.delId); return; }
+    var editBtn = e.target.closest('[data-edit-id]');
+    if (editBtn) { e.stopPropagation(); openEditModal(editBtn.dataset.editId); return; }
+    var patItem = e.target.closest('[data-pid]');
+    if (patItem) { openPatModal(patItem.dataset.pid); return; }
+  });
+});
+
+// ══════ GLOBAL EXPORTS ══════
+window.addDoctorToForm = addDoctorToForm;
+window.addPaciente = addPaciente;
+window.closeEditModal = closeEditModal;
+window.closeModal = closeModal;
+window.closeModalOverlay = closeModalOverlay;
+window.closePatModal = closePatModal;
+window.delPaciente = delPaciente;
+window.descargarFichaPDF = descargarFichaPDF;
+window.doLogin = doLogin;
+window.doLogout = doLogout;
+window.exportarExcel = exportarExcel;
+window.goTo = goTo;
+window.guardarEdicion = guardarEdicion;
+window.guardarSesion = guardarSesion;
+window.openEditModal = openEditModal;
+window.openModal = openModal;
+window.openPatModal = openPatModal;
+window.removeDoctorFromForm = removeDoctorFromForm;
+window.selectUser = selectUser;
+window.setFiltro = setFiltro;
+window.setTipo = setTipo;
+window.setTipoPac = setTipoPac;
+window.toggleUserMenu = toggleUserMenu;
 </script>
 </body>
 </html>
