@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kine A&G">
+<title>Kinesiología A&G</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --bg:#faf8f4;--fg:#1e2a26;--card:#fff;--primary:oklch(0.45 0.12 175);--primary-fg:#fff;
+  --primary-10:oklch(0.45 0.12 175/.10);--primary-5:oklch(0.45 0.12 175/.05);
+  --secondary:oklch(0.96 0.005 240);--muted:oklch(0.50 0.02 250);
+  --accent:oklch(0.80 0.15 75);--accent-fg:oklch(0.25 0.05 75);--accent-20:oklch(0.80 0.15 75/.20);
+  --destructive:oklch(0.55 0.20 25);--border:oklch(0.90 0.01 240);--border-50:oklch(0.90 0.01 240/.50);
+  --r:14px;--rx:18px;--sh:0 2px 16px rgba(45,80,72,.10);--sh2:0 8px 32px rgba(45,80,72,.15);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--fg);min-height:100dvh;padding-bottom:80px;-webkit-font-smoothing:antialiased}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+.login-box{width:100%;max-width:380px;background:var(--card);border:1px solid var(--border-50);border-radius:calc(var(--rx)+4px);padding:36px 28px;box-shadow:var(--sh2)}
+.login-icon{width:56px;height:56px;background:var(--primary);border-radius:var(--rx);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.login-icon svg{width:26px;height:26px;color:#fff}
+.login-title{font-size:1.3rem;font-weight:700;text-align:center;margin-bottom:4px;letter-spacing:-.02em}
+.login-sub{font-size:.82rem;color:var(--muted);text-align:center;margin-bottom:28px}
+.login-field{margin-bottom:14px}
+.login-field label{display:block;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px}
+.login-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--secondary);font-family:'Inter',sans-serif;font-size:.95rem;color:var(--fg);transition:border-color .15s,box-shadow .15s;-webkit-appearance:none}
+.login-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-10)}
+.login-input.error{border-color:var(--destructive)}
+.login-error{font-size:.78rem;color:var(--destructive);margin-top:6px;min-height:18px}
+.login-btn{width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:var(--rx);font-family:'Inter',sans-serif;font-size:.96rem;font-weight:600;cursor:pointer;margin-top:6px;box-shadow:0 4px 14px oklch(0.45 0.12 175/.35);transition:all .18s}
+.login-btn:hover{opacity:.92;transform:translateY(-1px)}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.user-select-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.user-btn{padding:12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--secondary);font-family:'Inter',sans-serif;font-size:.88rem;font-weight:500;color:var(--muted);cursor:pointer;text-align:center;transition:all .18s}
+.user-btn.sel{background:var(--primary-10);border-color:var(--primary);color:var(--primary)}
+#app-wrapper{display:none}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--border-50);background:rgba(255,255,255,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.header-inner{max-width:48rem;margin:0 auto;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.header-icon{width:40px;height:40px;background:var(--primary);border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.header-icon svg{width:20px;height:20px;color:#fff}
+.header-title{font-size:1.05rem;font-weight:600;letter-spacing:-.02em}
+.header-date{font-size:.72rem;color:var(--muted);text-transform:capitalize;margin-top:1px}
+.header-user{margin-left:auto;display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 10px;border-radius:var(--r);transition:background .15s;position:relative}
+.header-user:hover{background:var(--primary-10)}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{font-size:.78rem;font-weight:500;color:var(--fg)}
+.user-dropdown{position:fixed;top:62px;right:12px;z-index:200;background:var(--card);border:1px solid var(--border);border-radius:var(--rx);box-shadow:var(--sh2);min-width:200px;display:none}
+.user-dropdown.open{display:block;animation:slideDown .18s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.dd-info{padding:14px 16px;border-bottom:1px solid var(--border)}
+.dd-name{font-size:.88rem;font-weight:600}
+.dd-role{display:inline-flex;margin-top:6px;padding:2px 8px;background:var(--primary-10);color:var(--primary);border-radius:9999px;font-size:.68rem;font-weight:600;text-transform:uppercase}
+.dd-item{display:flex;align-items:center;gap:10px;padding:12px 16px;font-size:.84rem;cursor:pointer;transition:background .15s;border:none;background:none;width:100%;font-family:'Inter',sans-serif;color:var(--fg)}
+.dd-item:hover{background:var(--secondary)}
+.dd-item.danger{color:var(--destructive)}
+
+/* NAV */
+.nav{position:sticky;top:69px;z-index:40;border-bottom:1px solid var(--border-50);background:rgba(255,255,255,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.nav-inner{max-width:48rem;margin:0 auto;display:flex}
+.nav-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 8px;border:none;border-bottom:2px solid transparent;background:transparent;font-family:'Inter',sans-serif;font-size:.78rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .18s}
+.nav-btn svg{width:15px;height:15px}
+.nav-btn span{display:none}
+@media(min-width:380px){.nav-btn span{display:inline}}
+.nav-btn.active{color:var(--primary);border-bottom-color:var(--primary);background:var(--primary-5)}
+
+/* MAIN */
+.main{max-width:48rem;margin:0 auto;padding:18px 16px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border-50);border-radius:var(--rx);box-shadow:var(--sh);margin-bottom:14px;overflow:hidden}
+.card-header{padding:18px 20px 12px;display:flex;align-items:center;gap:8px}
+.card-header svg{width:15px;height:15px;color:var(--primary);flex-shrink:0}
+.card-title{font-size:.9rem;font-weight:600}
+.card-body{padding:0 20px 20px;display:flex;flex-direction:column;gap:13px}
+
+/* FORM */
+.field{display:flex;flex-direction:column;gap:5px}
+.label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.label.req::after{content:' *';color:var(--destructive)}
+.input,.select,.textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--secondary);font-family:'Inter',sans-serif;font-size:.88rem;color:var(--fg);transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none}
+.input:focus,.select:focus,.textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-10)}
+.textarea{resize:vertical;min-height:70px;line-height:1.5}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* TIPO SESSION */
+.tipo-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tipo-btn{padding:11px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--secondary);font-family:'Inter',sans-serif;font-size:.86rem;font-weight:500;color:var(--muted);cursor:pointer;text-align:center;transition:all .18s}
+.tipo-btn.sel{background:var(--primary-10);border-color:var(--primary);color:var(--primary)}
+.tipo-btn.sel-dom{background:var(--accent-20);border-color:var(--accent);color:var(--accent-fg)}
+
+/* TIPO PACIENTE */
+.tipo-pac-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tipo-pac-btn{padding:11px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--secondary);font-family:'Inter',sans-serif;font-size:.86rem;font-weight:500;color:var(--muted);cursor:pointer;text-align:center;transition:all .18s}
+.tipo-pac-btn.sel-particular{background:oklch(0.65 0.18 145/.12);border-color:oklch(0.65 0.18 145);color:oklch(0.38 0.18 145)}
+.tipo-pac-btn.sel-derivado{background:oklch(0.60 0.15 280/.12);border-color:oklch(0.60 0.15 280);color:oklch(0.38 0.15 280)}
+.inst-field{display:none;margin-top:8px}
+.inst-field.visible{display:block}
+.tipo-pac-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:9999px;font-size:.68rem;font-weight:600;margin-left:5px}
+.tipo-pac-badge.particular{background:oklch(0.65 0.18 145/.15);color:oklch(0.40 0.18 145)}
+.tipo-pac-badge.derivado{background:oklch(0.60 0.15 280/.15);color:oklch(0.40 0.15 280)}
+
+/* DOCTORS */
+.doctor-list{display:flex;flex-direction:column;gap:7px;margin-bottom:8px}
+.doctor-tag{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--primary-10);border:1px solid oklch(0.45 0.12 175/.20);border-radius:var(--r);padding:9px 12px}
+.doctor-tag-name{font-size:.84rem;font-weight:600;color:var(--primary)}
+.doctor-tag-spec{font-size:.72rem;color:var(--muted)}
+.doctor-tag-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px;border-radius:4px;transition:all .15s;flex-shrink:0}
+.doctor-tag-del:hover{background:oklch(0.55 0.20 25/.10);color:var(--destructive)}
+.add-doctor-row{display:flex;gap:8px;align-items:flex-end}
+.add-doctor-row .field{flex:1;margin-bottom:0}
+.btn-add-doc{flex-shrink:0;padding:10px 14px;background:var(--primary-10);color:var(--primary);border:1px solid oklch(0.45 0.12 175/.25);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;height:40px;display:flex;align-items:center;gap:5px}
+.btn-add-doc:hover{background:oklch(0.45 0.12 175/.18)}
+
+/* BUTTONS */
+.btn-primary{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;background:var(--primary);color:var(--primary-fg);border:none;border-radius:var(--rx);font-family:'Inter',sans-serif;font-size:.96rem;font-weight:600;cursor:pointer;box-shadow:0 4px 14px oklch(0.45 0.12 175/.35);transition:all .18s}
+.btn-primary:hover{opacity:.92;transform:translateY(-1px)}
+.btn-primary svg{width:18px;height:18px}
+
+/* EXPORT CARD */
+.export-card{background:linear-gradient(135deg,oklch(0.38 0.10 175),oklch(0.30 0.08 175));border-radius:var(--rx);padding:20px;margin-bottom:14px;color:#fff;box-shadow:var(--sh)}
+.export-card h3{display:flex;align-items:center;gap:8px;font-size:1rem;font-weight:600;margin-bottom:4px}
+.export-card h3 svg{width:18px;height:18px}
+.export-card p{font-size:.8rem;opacity:.8;margin-bottom:14px;line-height:1.5}
+.export-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.export-select{padding:9px 12px;border-radius:var(--r);border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.18);color:#fff;font-family:'Inter',sans-serif;font-size:.84rem;cursor:pointer;-webkit-appearance:none;flex:1;min-width:140px}
+.export-select option{color:var(--fg);background:#fff}
+.btn-export{display:flex;align-items:center;gap:7px;padding:9px 18px;background:#fff;color:var(--primary);border:none;border-radius:var(--r);font-family:'Inter',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap}
+.btn-export:hover{background:oklch(0.97 0.005 175);transform:translateY(-1px)}
+.btn-export svg{width:15px;height:15px}
+
+/* FILTERS */
+.filter-row{display:flex;gap:7px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.chip{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:9999px;border:1.5px solid var(--border);background:var(--card);font-family:'Inter',sans-serif;font-size:.75rem;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s}
+.chip svg{width:12px;height:12px}
+.chip.active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 2px 8px oklch(0.45 0.12 175/.30)}
+
+/* MONTH */
+.month-group{margin-bottom:20px}
+.month-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.month-label{font-size:.82rem;font-weight:600;color:var(--fg);text-transform:capitalize}
+.month-badges{display:flex;gap:6px}
+.mbadge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:9999px;font-size:.7rem;font-weight:600}
+.mbadge svg{width:11px;height:11px}
+.mbadge-green{background:var(--primary-10);color:var(--primary)}
+.mbadge-amber{background:var(--accent-20);color:var(--accent-fg)}
+
+/* SESSION ITEM */
+.session-item{width:100%;text-align:left;background:var(--card);border:1px solid var(--border-50);border-radius:var(--rx);border-left:4px solid var(--primary);padding:14px 16px;margin-bottom:8px;cursor:pointer;box-shadow:var(--sh);transition:all .18s;display:block}
+.session-item.dom{border-left-color:var(--accent)}
+.session-item:hover{box-shadow:var(--sh2);transform:translateY(-1px)}
+.si-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:5px}
+.si-name{font-size:.9rem;font-weight:500}
+.si-badge{flex-shrink:0;padding:2px 9px;border-radius:9999px;font-size:.68rem;font-weight:500;text-transform:uppercase}
+.si-badge.consulta{background:var(--primary-10);color:var(--primary)}
+.si-badge.domicilio{background:var(--accent-20);color:var(--accent-fg)}
+.si-meta{display:flex;align-items:center;gap:10px;font-size:.74rem;color:var(--muted);margin-bottom:6px;flex-wrap:wrap}
+.si-meta span{display:flex;align-items:center;gap:4px}
+.si-meta svg{width:12px;height:12px}
+.si-summary{font-size:.8rem;color:var(--muted);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.audit-chip{font-size:.68rem;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:4px}
+.audit-chip svg{width:10px;height:10px}
+
+/* PATIENT ITEM */
+.pat-item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--border-50);border-radius:var(--rx);padding:14px 16px;margin-bottom:8px;box-shadow:var(--sh);cursor:pointer;transition:all .18s}
+.pat-item:hover{box-shadow:var(--sh2);transform:translateY(-1px)}
+.pat-name{font-size:.88rem;font-weight:500}
+.pat-meta{font-size:.73rem;color:var(--muted);margin-top:3px}
+.pat-count{display:flex;align-items:center;gap:4px;font-size:.73rem;font-weight:500;color:var(--primary);margin-top:4px}
+.pat-count svg{width:11px;height:11px}
+.age-chip{display:inline-flex;align-items:center;gap:4px;background:var(--primary-10);color:var(--primary);border-radius:9999px;padding:2px 10px;font-size:.72rem;font-weight:600;margin-left:5px}
+.btn-ghost-del{flex-shrink:0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:var(--r);color:var(--muted);cursor:pointer;transition:all .15s}
+.btn-ghost-del svg{width:15px;height:15px}
+.btn-ghost-del:hover{background:oklch(0.55 0.20 25/.10);color:var(--destructive)}
+.btn-edit-pat{display:flex;align-items:center;gap:5px;padding:6px 12px;background:var(--primary-10);color:var(--primary);border:1px solid oklch(0.45 0.12 175/.20);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:.74rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-edit-pat svg{width:12px;height:12px}
+.btn-edit-pat:hover{background:oklch(0.45 0.12 175/.18)}
+
+/* PAT SEARCH */
+.pat-search-wrap{position:relative;margin-bottom:12px}
+.pat-search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted);pointer-events:none}
+.pat-search{width:100%;padding:10px 12px 10px 36px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--secondary);font-family:'Inter',sans-serif;font-size:.88rem;color:var(--fg);-webkit-appearance:none;transition:border-color .15s}
+.pat-search:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-10)}
+.section-label{display:flex;align-items:center;gap:7px;font-size:.84rem;font-weight:600;margin-bottom:10px}
+.section-label svg{width:15px;height:15px;color:var(--primary)}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:oklch(0.15 0.02 250/.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px 48px;width:100%;max-width:48rem;max-height:88vh;overflow-y:auto;animation:slideUp .28s cubic-bezier(.32,.72,0,1)}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+.modal h2{font-size:1.2rem;font-weight:600;margin-bottom:3px}
+.modal-meta{font-size:.78rem;color:var(--muted);padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:16px;line-height:1.6}
+.m-sec{margin-bottom:13px}
+.m-sec label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:4px}
+.m-sec p{font-size:.86rem;line-height:1.5}
+.btn-close-icon{flex-shrink:0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:var(--secondary);border:none;border-radius:var(--r);color:var(--muted);cursor:pointer;transition:background .15s}
+.btn-close-icon:hover{background:var(--border)}
+.btn-close-icon svg{width:16px;height:16px}
+.modal-tipo-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:9999px;font-size:.75rem;font-weight:500;text-transform:uppercase;margin-bottom:14px}
+.modal-tipo-badge svg{width:13px;height:13px}
+.modal-tipo-badge.consulta{background:var(--primary-10);color:var(--primary)}
+.modal-tipo-badge.domicilio{background:var(--accent-20);color:var(--accent-fg)}
+.modal-address{display:flex;align-items:flex-start;gap:8px;background:var(--accent-20);border-radius:var(--r);padding:10px 12px;margin-bottom:14px;font-size:.84rem;color:var(--accent-fg)}
+.modal-address svg{width:15px;height:15px;flex-shrink:0;margin-top:1px}
+.modal-divider{height:1px;background:var(--border);margin:14px 0}
+.btn-destructive{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:oklch(0.55 0.20 25/.10);color:var(--destructive);border:1px solid oklch(0.55 0.20 25/.20);border-radius:var(--rx);font-family:'Inter',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-destructive:hover{background:oklch(0.55 0.20 25/.15)}
+.btn-outline{width:100%;padding:12px;background:transparent;color:var(--fg);border:1px solid var(--border);border-radius:var(--rx);font-family:'Inter',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;margin-top:8px;transition:background .15s}
+.btn-outline:hover{background:var(--secondary)}
+.btn-pdf{display:flex;align-items:center;gap:6px;padding:8px 14px;background:oklch(0.55 0.20 25/.08);color:oklch(0.45 0.18 25);border:1px solid oklch(0.55 0.20 25/.20);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-pdf svg{width:13px;height:13px}
+.btn-pdf:hover{background:oklch(0.55 0.20 25/.14)}
+
+/* PAT MODAL */
+#pat-modal-overlay{position:fixed;inset:0;z-index:300;background:oklch(0.15 0.02 250/.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center}
+#pat-modal-overlay.open{display:flex}
+.pat-modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px 48px;width:100%;max-width:48rem;max-height:88vh;overflow-y:auto;animation:slideUp .28s cubic-bezier(.32,.72,0,1)}
+.pat-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px}
+.pat-modal-name{font-size:1.2rem;font-weight:700}
+.pat-modal-meta{font-size:.76rem;color:var(--muted);margin-bottom:14px}
+.pat-stats-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.pat-stat{flex:1;min-width:80px;background:var(--secondary);border-radius:var(--r);padding:12px;text-align:center}
+.pat-stat-num{font-size:1.4rem;font-weight:700;color:var(--primary);line-height:1}
+.pat-stat-label{font-size:.68rem;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+.pat-hist-divider{height:1px;background:var(--border);margin:4px 0 16px}
+.pat-hist-title{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.pat-sess-item{border-left:3px solid var(--primary);padding:12px 14px;border-radius:0 var(--r) var(--r) 0;background:var(--secondary);margin-bottom:8px}
+.pat-sess-item.dom{border-left-color:var(--accent)}
+.pat-sess-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.pat-sess-date{font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:6px}
+.pat-sess-date svg{width:13px;height:13px;color:var(--muted)}
+.pat-sess-badge{font-size:.66rem;padding:2px 8px;border-radius:9999px;font-weight:600;text-transform:uppercase}
+.pat-sess-badge.consulta{background:var(--primary-10);color:var(--primary)}
+.pat-sess-badge.domicilio{background:var(--accent-20);color:var(--accent-fg)}
+.pat-sess-info{font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
+.pat-sess-info svg{width:11px;height:11px}
+.pat-sess-summary{font-size:.8rem;line-height:1.45}
+.pm-doctors{margin-bottom:14px}
+.pm-doctors-title{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
+.pm-doctor-chip{display:inline-flex;align-items:center;gap:5px;background:var(--primary-10);color:var(--primary);border-radius:9999px;padding:3px 10px;font-size:.75rem;font-weight:500;margin-right:6px;margin-bottom:6px}
+
+/* EDIT MODAL */
+#edit-modal-overlay{position:fixed;inset:0;z-index:400;background:oklch(0.15 0.02 250/.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center}
+#edit-modal-overlay.open{display:flex}
+.edit-modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px 48px;width:100%;max-width:48rem;max-height:92vh;overflow-y:auto;animation:slideUp .28s cubic-bezier(.32,.72,0,1)}
+.edit-modal-title{font-size:1rem;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.edit-modal-title svg{width:16px;height:16px;color:var(--primary)}
+.btn-save-edit{width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:var(--rx);font-family:'Inter',sans-serif;font-size:.96rem;font-weight:600;cursor:pointer;box-shadow:0 4px 14px oklch(0.45 0.12 175/.35);transition:all .18s;margin-top:4px}
+.btn-save-edit:hover{opacity:.92;transform:translateY(-1px)}
+.btn-cancel-edit{width:100%;padding:12px;background:transparent;color:var(--fg);border:1px solid var(--border);border-radius:var(--rx);font-family:'Inter',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:background .15s;margin-top:8px}
+.btn-cancel-edit:hover{background:var(--secondary)}
+
+/* MISC */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 20px;text-align:center}
+.empty svg{width:48px;height:48px;color:oklch(0.50 0.02 250/.40);margin-bottom:12px}
+.empty p{font-size:.88rem;color:var(--muted)}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:oklch(0.18 0.02 250);color:#fff;padding:11px 22px;border-radius:9999px;font-size:.82rem;font-weight:500;z-index:999;transition:transform .28s cubic-bezier(.32,.72,0,1);white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.dir-field{display:none}
+.dir-field.visible{display:flex;flex-direction:column;gap:5px}
+#offline-bar{display:none;position:fixed;top:0;left:0;right:0;z-index:9997;padding:6px;text-align:center;font-family:'Inter',sans-serif;font-size:.75rem;font-weight:600;background:#d4820a;color:#fff}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <div class="login-title">Kinesiología A&amp;G</div>
+    <div class="login-sub">Selecciona tu perfil</div>
+    <div class="user-select-row">
+      <button class="user-btn sel" id="ubtn-gero" onclick="selectUser('Gero',this)">👤 Gero</button>
+      <button class="user-btn" id="ubtn-ale" onclick="selectUser('Alejandra',this)">👤 Alejandra</button>
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input class="login-input" type="password" id="login-pass" placeholder="Ingresa la contraseña" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password" />
+      <div class="login-error" id="login-error"></div>
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar</button>
+  </div>
+</div>
+
+<div id="app-wrapper">
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <div>
+      <div class="header-title">Kinesiología A&amp;G</div>
+      <div class="header-date" id="hdr-date"></div>
+    </div>
+    <div class="header-user" onclick="toggleUserMenu()" id="header-user">
+      <div class="user-avatar" id="user-avatar">G</div>
+      <div class="user-name" id="user-name-hdr">Gero</div>
+    </div>
+  </div>
+</header>
+<div id="offline-bar">⚠️ Sin conexión — los datos se guardarán localmente y sincronizarán al reconectar</div>
+<div class="user-dropdown" id="user-dropdown">
+  <div class="dd-info">
+    <div class="dd-name" id="dd-name">Gero</div>
+    <div class="dd-role" id="dd-role">Admin</div>
+  </div>
+  <button class="dd-item danger" onclick="doLogout()">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Cerrar sesión
+  </button>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" id="nav-nueva" onclick="goTo('nueva',this)">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Nueva sesión</span>
+    </button>
+    <button class="nav-btn" id="nav-historial" onclick="goTo('historial',this)">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+      <span>Historial</span>
+    </button>
+    <button class="nav-btn" id="nav-pacientes" onclick="goTo('pacientes',this)">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Pacientes</span>
+    </button>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- NUEVA SESIÓN -->
+<div id="screen-nueva" class="screen active">
+  <div class="card">
+    <div class="card-header">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <div class="card-title">Datos de la sesión</div>
+    </div>
+    <div class="card-body">
+      <div class="field"><label class="label">Paciente</label><select class="select" id="sel-pac"><option value="">Seleccionar paciente</option></select></div>
+      <div class="field">
+        <label class="label">Tipo de sesión</label>
+        <div class="tipo-row">
+          <button class="tipo-btn sel" id="btn-c" onclick="setTipo('consulta')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Consulta</button>
+          <button class="tipo-btn" id="btn-d" onclick="setTipo('domicilio')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Domicilio</button>
+        </div>
+      </div>
+      <div class="dir-field field" id="dir-field"><label class="label">Dirección del domicilio</label><input class="input" type="text" id="inp-dir" placeholder="Ej: Av. Las Condes 1234" /></div>
+      <div class="grid-2">
+        <div class="field"><label class="label">Fecha</label><input class="input" type="date" id="inp-fecha" /></div>
+        <div class="field"><label class="label">Hora inicio</label><input class="input" type="time" id="inp-hora" /></div>
+      </div>
+      <div class="field"><label class="label">Duración</label>
+        <select class="select" id="inp-dur">
+          <option value="30">30 minutos</option><option value="45">45 minutos</option>
+          <option value="60" selected>60 minutos</option><option value="75">75 minutos</option>
+          <option value="90">90 minutos</option><option value="120">120 minutos</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <div class="card-title">Reporte clínico</div>
+    </div>
+    <div class="card-body">
+      <div class="field"><label class="label">Resumen de la sesión</label><textarea class="textarea" id="inp-resumen" placeholder="Describe brevemente lo trabajado..." rows="3"></textarea></div>
+      <div class="field"><label class="label">Zona / Diagnóstico</label><input class="input" type="text" id="inp-zona" placeholder="Ej: Lumbar L4-L5..." /></div>
+      <div class="field"><label class="label">Técnicas utilizadas</label><input class="input" type="text" id="inp-tecnicas" placeholder="Ej: Masoterapia, TENS..." /></div>
+      <div class="field"><label class="label">Indicaciones próxima sesión</label><textarea class="textarea" id="inp-proxima" placeholder="Objetivos próxima vez..." rows="2"></textarea></div>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="guardarSesion()">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    Registrar sesión
+  </button>
+</div>
+
+<!-- HISTORIAL -->
+<div id="screen-historial" class="screen">
+  <div class="export-card">
+    <h3><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>Exportar a Excel</h3>
+    <p>Detalle de sesiones, resumen por paciente y total de horas.</p>
+    <div class="export-row">
+      <select class="export-select" id="sel-mes-export"><option value="todos">Todos los meses</option></select>
+      <button class="btn-export" onclick="exportarExcel()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
+      </button>
+    </div>
+  </div>
+  <div class="filter-row">
+    <button class="chip active" onclick="setFiltro('todos',this)">Todos</button>
+    <button class="chip" onclick="setFiltro('consulta',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Consulta</button>
+    <button class="chip" onclick="setFiltro('domicilio',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Domicilio</button>
+  </div>
+  <div id="hist-list"></div>
+</div>
+
+<!-- PACIENTES -->
+<div id="screen-pacientes" class="screen">
+  <div class="card">
+    <div class="card-header">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      <div class="card-title">Nuevo paciente</div>
+    </div>
+    <div class="card-body">
+      <div class="field"><label class="label">Nombre completo</label><input class="input" type="text" id="new-name" placeholder="Nombre Apellido" /></div>
+      <div class="grid-2">
+        <div class="field"><label class="label">RUT (opcional)</label><input class="input" type="text" id="new-rut" placeholder="12.345.678-9" oninput="formatRut(this)" maxlength="12" /></div>
+        <div class="field"><label class="label req">Fecha de nacimiento</label><input class="input" type="date" id="new-dob" /></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label class="label">Teléfono</label><input class="input" type="tel" id="new-tel" placeholder="+56 9 ..." /></div>
+        <div class="field"><label class="label">Email</label><input class="input" type="email" id="new-email" placeholder="correo@email.com" /></div>
+      </div>
+      <div class="field"><label class="label">Notas clínicas</label><input class="input" type="text" id="new-notes" placeholder="Ej: Lumbar crónico..." /></div>
+      <div class="field">
+        <label class="label">Tipo de paciente</label>
+        <div class="tipo-pac-row">
+          <button type="button" class="tipo-pac-btn sel-particular" id="new-tipo-part" onclick="setTipoPac('new','particular')">👤 Particular</button>
+          <button type="button" class="tipo-pac-btn" id="new-tipo-deriv" onclick="setTipoPac('new','derivado')">🏥 Derivado</button>
+        </div>
+        <div class="inst-field" id="new-inst-field"><input class="input" type="text" id="new-institucion" placeholder="Nombre institución derivadora" style="margin-top:8px" /></div>
+      </div>
+      <div class="field">
+        <label class="label">Médicos tratantes</label>
+        <div class="doctor-list" id="new-doctors-list"></div>
+        <div class="add-doctor-row">
+          <div class="field"><input class="input" type="text" id="new-doc-name" placeholder="Dr. Nombre Apellido" style="margin-bottom:0" /></div>
+          <div class="field"><select class="select" id="new-doc-spec" style="margin-bottom:0"><option value="">Especialidad</option></select></div>
+          <button class="btn-add-doc" onclick="addDoctorToForm('new')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar</button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addPaciente()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Agregar paciente
+      </button>
+    </div>
+  </div>
+  <div class="section-label">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Pacientes activos
+  </div>
+  <div class="pat-search-wrap">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="pat-search" type="text" id="pat-search" placeholder="Buscar por nombre, RUT, notas..." oninput="renderPacientes()" />
+  </div>
+  <div id="pat-list"></div>
+</div>
+
+</main>
+
+<!-- MODAL SESIÓN -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOverlay(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px">
+      <h2 id="m-name"></h2>
+      <button class="btn-close-icon" onclick="closeModal()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-meta" id="m-meta"></div>
+    <div id="m-tipo-badge"></div>
+    <div id="m-address"></div>
+    <div class="modal-divider"></div>
+    <div class="m-sec" id="mf-resumen"></div>
+    <div class="m-sec" id="mf-zona"></div>
+    <div class="m-sec" id="mf-tecnicas"></div>
+    <div class="m-sec" id="mf-proxima"></div>
+    <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
+      <button class="btn-destructive" id="m-del-btn">Eliminar sesión</button>
+      <button class="btn-outline" onclick="closeModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PACIENTE -->
+<div id="pat-modal-overlay" onclick="closePatModal(event)">
+  <div class="pat-modal">
+    <div class="modal-handle"></div>
+    <div class="pat-modal-head">
+      <div><div class="pat-modal-name" id="pm-name"></div><div class="pat-modal-meta" id="pm-meta"></div></div>
+      <button class="btn-close-icon" onclick="document.getElementById('pat-modal-overlay').classList.remove('open')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="pat-stats-row" id="pm-stats"></div>
+    <div class="pat-hist-divider"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="pat-hist-title" style="margin-bottom:0">Historial de sesiones</div>
+      <button class="btn-pdf" onclick="descargarFichaPDF()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Descargar ficha</button>
+    </div>
+    <div id="pm-sessions"></div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR PACIENTE -->
+<div id="edit-modal-overlay" onclick="closeEditModal(event)">
+  <div class="edit-modal">
+    <div class="modal-handle"></div>
+    <div class="edit-modal-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar paciente</div>
+    <input type="hidden" id="edit-id" />
+    <div class="field" style="margin-bottom:13px"><label class="label">Nombre completo</label><input class="input" type="text" id="edit-name" /></div>
+    <div class="grid-2" style="margin-bottom:13px">
+      <div class="field"><label class="label">RUT</label><input class="input" type="text" id="edit-rut" oninput="formatRut(this)" maxlength="12" /></div>
+      <div class="field"><label class="label req">Fecha de nacimiento</label><input class="input" type="date" id="edit-dob" /></div>
+    </div>
+    <div class="grid-2" style="margin-bottom:13px">
+      <div class="field"><label class="label">Teléfono</label><input class="input" type="tel" id="edit-tel" /></div>
+      <div class="field"><label class="label">Email</label><input class="input" type="email" id="edit-email" /></div>
+    </div>
+    <div class="field" style="margin-bottom:13px"><label class="label">Notas clínicas</label><input class="input" type="text" id="edit-notes" /></div>
+    <div class="field" style="margin-bottom:13px">
+      <label class="label">Tipo de paciente</label>
+      <div class="tipo-pac-row">
+        <button type="button" class="tipo-pac-btn sel-particular" id="edit-tipo-part" onclick="setTipoPac('edit','particular')">👤 Particular</button>
+        <button type="button" class="tipo-pac-btn" id="edit-tipo-deriv" onclick="setTipoPac('edit','derivado')">🏥 Derivado</button>
+      </div>
+      <div class="inst-field" id="edit-inst-field"><input class="input" type="text" id="edit-institucion" placeholder="Nombre institución" style="margin-top:8px" /></div>
+    </div>
+    <div class="field" style="margin-bottom:18px">
+      <label class="label">Médicos tratantes</label>
+      <div class="doctor-list" id="edit-doctors-list"></div>
+      <div class="add-doctor-row">
+        <div class="field"><input class="input" type="text" id="edit-doc-name" placeholder="Dr. Nombre Apellido" style="margin-bottom:0" /></div>
+        <div class="field"><select class="select" id="edit-doc-spec" style="margin-bottom:0"><option value="">Especialidad</option></select></div>
+        <button class="btn-add-doc" onclick="addDoctorToForm('edit')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar</button>
+      </div>
+    </div>
+    <button class="btn-save-edit" onclick="guardarEdicion()">Guardar cambios</button>
+    <button class="btn-cancel-edit" onclick="document.getElementById('edit-modal-overlay').classList.remove('open')">Cancelar</button>
+  </div>
+</div>
+
+</div><!-- end app-wrapper -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════ CONFIG ══════
+const SB_URL     = 'https://rizwvytcxobvrgfqzkpj.supabase.co'
+const SB_KEY     = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpend2eXRjeG9idnJnZnF6a3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNzI2MTcsImV4cCI6MjA5MDY0ODYxN30.VhIDEF2dZFCyPNmNF48VfP39m2gA3oCx_UCd_npBbII'
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzhBGsZHLc5NhUtIWU0ZRohkbWAi5KcmvY_QURDzZXSFflEUCDxy3uBHbrS_EOB5EIz/exec'
+const ORG_ID     = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+
+const USERS = {
+  'Gero':      { pass: '23@Mayo2026', role: 'Admin',       initials: 'GA' },
+  'Alejandra': { pass: '23@Mayo2026', role: 'Kinesióloga', initials: 'AJ' }
+}
+
+// ══════ SUPABASE ══════
+const sb = {
+  h: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+  async getAll(table) {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}?select=*&order=id.desc`, { headers: this.h })
+    if (!r.ok) throw new Error(await r.text())
+    return r.json()
+  },
+  async insert(table, row) {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}`, { method: 'POST', headers: this.h, body: JSON.stringify(row) })
+    if (!r.ok) throw new Error(await r.text())
+    const d = await r.json(); return Array.isArray(d) ? d[0] : d
+  },
+  async update(table, id, row) {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'PATCH', headers: this.h, body: JSON.stringify(row) })
+    if (!r.ok) throw new Error(await r.text())
+    const d = await r.json(); return Array.isArray(d) ? d[0] : d
+  },
+  async del(table, id) {
+    const r = await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'DELETE', headers: this.h })
+    if (!r.ok) throw new Error(await r.text())
+  }
+}
+
+// ══════ LOCAL CACHE ══════
+const CACHE = {
+  get patients() { return JSON.parse(localStorage.getItem('kp') || '[]') },
+  set patients(v) { localStorage.setItem('kp', JSON.stringify(v)) },
+  get sessions()  { return JSON.parse(localStorage.getItem('ks') || '[]') },
+  set sessions(v) { localStorage.setItem('ks', JSON.stringify(v)) },
+  get pending()   { return JSON.parse(localStorage.getItem('kpend') || '[]') },
+  set pending(v)  { localStorage.setItem('kpend', JSON.stringify(v)) },
+}
+const DB = { patients: [...CACHE.patients], sessions: [...CACHE.sessions] }
+
+// ══════ OFFLINE QUEUE ══════
+function queueOp(op, table, id, row) {
+  const q = CACHE.pending.filter(x => !(x.table === table && x.id === id))
+  q.push(op === 'delete' ? { op, table, id } : { op, table, id, row })
+  CACHE.pending = q
+}
+
+async function flushPending() {
+  const q = CACHE.pending; if (!q.length) return
+  const done = []
+  for (const item of q) {
+    try {
+      if (item.op === 'insert') await sb.insert(item.table, item.row)
+      else if (item.op === 'update') await sb.update(item.table, item.id, item.row)
+      else if (item.op === 'delete') await sb.del(item.table, item.id)
+      done.push(item)
+    } catch { break }
+  }
+  if (done.length) {
+    CACHE.pending = q.filter(x => !done.includes(x))
+    toast(`☁️ ${done.length} operación(es) sincronizada(s)`)
+  }
+}
+
+// ══════ ONLINE/OFFLINE ══════
+function updateOnlineBar() {
+  const bar = document.getElementById('offline-bar')
+  if (navigator.onLine) { bar.style.display = 'none'; flushPending() }
+  else bar.style.display = 'block'
+}
+window.addEventListener('online', updateOnlineBar)
+window.addEventListener('offline', updateOnlineBar)
+
+// ══════ LOGIN ══════
+const SESSION_KEY = 'kine_auth'
+const SESSION_TS  = 'kine_auth_ts'
+const SESSION_USR = 'kine_user'
+const TIMEOUT_MS  = 30 * 60 * 1000
+let currentUser = null
+let selectedUser = 'Gero'
+
+function selectUser(name, btn) {
+  selectedUser = name
+  document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('sel'))
+  btn.classList.add('sel')
+  document.getElementById('login-pass').value = ''
+  document.getElementById('login-error').textContent = ''
+}
+
+function doLogin() {
+  const pass = document.getElementById('login-pass').value
+  const err  = document.getElementById('login-error')
+  const btn  = document.getElementById('login-btn')
+  if (!pass) { err.textContent = 'Ingresa la contraseña'; return }
+  if (pass !== USERS[selectedUser].pass) {
+    err.textContent = 'Contraseña incorrecta'
+    document.getElementById('login-pass').value = ''
+    document.getElementById('login-input') && document.getElementById('login-pass').classList.add('error')
+    return
+  }
+  currentUser = selectedUser
+  localStorage.setItem(SESSION_KEY, 'ok')
+  localStorage.setItem(SESSION_TS,  String(Date.now()))
+  localStorage.setItem(SESSION_USR, currentUser)
+  showApp()
+  loadData()
+}
+
+function checkSession() {
+  const auth = localStorage.getItem(SESSION_KEY)
+  const ts   = parseInt(localStorage.getItem(SESSION_TS) || '0')
+  const usr  = localStorage.getItem(SESSION_USR)
+  if (auth === 'ok' && usr && Date.now() - ts < TIMEOUT_MS) {
+    currentUser = usr
+    // Restore selected user button
+    if (usr === 'Alejandra') {
+      document.getElementById('ubtn-ale').classList.add('sel')
+      document.getElementById('ubtn-gero').classList.remove('sel')
+    }
+    return true
+  }
+  return false
+}
+
+function doLogout() {
+  localStorage.removeItem(SESSION_KEY)
+  localStorage.removeItem(SESSION_TS)
+  localStorage.removeItem(SESSION_USR)
+  currentUser = null
+  document.getElementById('user-dropdown').classList.remove('open')
+  document.getElementById('login-pass').value = ''
+  document.getElementById('login-error').textContent = ''
+  document.getElementById('login-screen').style.display = 'flex'
+  document.getElementById('app-wrapper').style.display  = 'none'
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none'
+  document.getElementById('app-wrapper').style.display  = 'block'
+  const u = USERS[currentUser]
+  document.getElementById('user-avatar').textContent   = u.initials
+  document.getElementById('user-name-hdr').textContent = currentUser
+  document.getElementById('dd-name').textContent       = currentUser
+  document.getElementById('dd-role').textContent       = u.role
+}
+
+// Activity tracking — reset session timeout
+;['click','touchstart','keydown','scroll'].forEach(ev =>
+  document.addEventListener(ev, () => {
+    if (currentUser) localStorage.setItem(SESSION_TS, String(Date.now()))
+  }, { passive: true })
+)
+// Check timeout every 60s
+setInterval(() => {
+  if (!currentUser) return
+  const ts = parseInt(localStorage.getItem(SESSION_TS) || '0')
+  if (Date.now() - ts >= TIMEOUT_MS) { doLogout(); toast('Sesión expirada por inactividad') }
+}, 60000)
+// Check on tab focus
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && currentUser) {
+    const ts = parseInt(localStorage.getItem(SESSION_TS) || '0')
+    if (Date.now() - ts >= TIMEOUT_MS) doLogout()
+  }
+})
+
+// User menu
+function toggleUserMenu() {
+  document.getElementById('user-dropdown').classList.toggle('open')
+}
+document.addEventListener('click', e => {
+  const dd = document.getElementById('user-dropdown')
+  const hu = document.getElementById('header-user')
+  if (dd && !dd.contains(e.target) && hu && !hu.contains(e.target)) dd.classList.remove('open')
+})
+
+// ══════ INIT ══════
+let currentTipo   = 'consulta'
+let filtroActivo  = 'todos'
+
+document.getElementById('hdr-date').textContent =
+  new Date().toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' })
+const now = new Date()
+document.getElementById('inp-fecha').value = now.toISOString().slice(0,10)
+document.getElementById('inp-hora').value  = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+
+const ESPECIALIDADES = ['Traumatología','Reumatología','Neurología','Cardiología','Medicina Interna','Medicina Familiar','Ortopedia','Fisiatría','Pediatría','Geriatría','Oncología','Cirugía General','Neurocirugía','Ginecología','Urología','Oftalmología','Otorrinolaringología','Dermatología','Endocrinología','Psiquiatría','Otro']
+
+// Check session on load
+if (checkSession()) {
+  showApp()
+  loadData()
+} else {
+  document.getElementById('login-screen').style.display = 'flex'
+}
+
+// ══════ LOAD DATA ══════
+async function loadData() {
+  renderSelectPacientes(); renderPacientes(); renderHistorial(); buildMesExport()
+  populateSpecSelects()
+  updateOnlineBar()
+  if (!navigator.onLine) { toast('Sin conexión · Mostrando datos locales'); return }
+  try {
+    await flushPending()
+    const [patients, sessions] = await Promise.all([sb.getAll('patients'), sb.getAll('sessions')])
+    DB.patients = patients.map(p => ({
+      id: p.id, name: p.name, rut: p.rut||'', dob: p.dob||'', tel: p.tel||'',
+      email: p.email||'', notes: p.notes||'', doctors: p.doctors||[],
+      tipo_pac: p.tipo_pac||'particular', institucion: p.institucion||''
+    }))
+    DB.sessions = sessions.map(s => ({
+      id: s.id, patientId: s.patient_id, patientName: s.patient_name,
+      tipo: s.tipo, direccion: s.direccion||'', fecha: s.fecha, hora: s.hora,
+      duracion: s.duracion, resumen: s.resumen||'', zona: s.zona||'',
+      tecnicas: s.tecnicas||'', proxima: s.proxima||'', createdBy: s.created_by||''
+    }))
+    CACHE.patients = DB.patients; CACHE.sessions = DB.sessions
+    renderSelectPacientes(); renderPacientes(); renderHistorial(); buildMesExport()
+  } catch(e) { toast('Datos locales · ' + e.message) }
+}
+
+// ══════ NAV ══════
+function goTo(name, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'))
+  document.getElementById('screen-' + name).classList.add('active')
+  btn.classList.add('active')
+  if (name === 'historial') { renderHistorial(); buildMesExport() }
+  if (name === 'pacientes') renderPacientes()
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast')
+  t.textContent = msg; t.classList.add('show')
+  setTimeout(() => t.classList.remove('show'), 2800)
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+function parseUserName(val) {
+  if (!val) return ''
+  // If it's a JSON object string (legacy), extract full_name
+  if (String(val).trim().startsWith('{')) {
+    try { const obj = JSON.parse(val); return obj.full_name || obj.name || 'Usuario' } catch {}
+  }
+  return String(val)
+}
+
+// ══════ TIPO SESIÓN ══════
+function setTipo(t) {
+  currentTipo = t
+  document.getElementById('btn-c').className = 'tipo-btn' + (t==='consulta'?' sel':'')
+  document.getElementById('btn-d').className = 'tipo-btn' + (t==='domicilio'?' sel-dom':'')
+  document.getElementById('dir-field').classList.toggle('visible', t==='domicilio')
+}
+
+// ══════ TIPO PACIENTE ══════
+function setTipoPac(prefix, tipo) {
+  document.getElementById(prefix+'-tipo-part').className = 'tipo-pac-btn' + (tipo==='particular'?' sel-particular':'')
+  document.getElementById(prefix+'-tipo-deriv').className = 'tipo-pac-btn' + (tipo==='derivado'?' sel-derivado':'')
+  document.getElementById(prefix+'-inst-field').classList.toggle('visible', tipo==='derivado')
+  if (tipo==='particular') { const el = document.getElementById(prefix+'-institucion'); if(el) el.value='' }
+}
+function getTipoPac(prefix) {
+  return document.getElementById(prefix+'-tipo-deriv').classList.contains('sel-derivado') ? 'derivado' : 'particular'
+}
+
+// ══════ PACIENTES ══════
+function calcAge(dob) {
+  if (!dob) return null
+  const b = new Date(dob+'T12:00:00'), n = new Date()
+  let age = n.getFullYear()-b.getFullYear()
+  const m = n.getMonth()-b.getMonth()
+  if (m<0||(m===0&&n.getDate()<b.getDate())) age--
+  return age
+}
+
+function renderSelectPacientes() {
+  const s = document.getElementById('sel-pac')
+  s.innerHTML = '<option value="">Seleccionar paciente</option>'
+  DB.patients.forEach(p => { s.innerHTML += `<option value="${p.id}">${esc(p.name)}</option>` })
+}
+
+function renderPacientes() {
+  const list  = document.getElementById('pat-list')
+  const query = (document.getElementById('pat-search')?.value||'').toLowerCase().trim()
+  let ps = DB.patients
+  if (query) ps = ps.filter(p => (p.name+' '+p.rut+' '+p.tel+' '+p.notes+' '+p.email).toLowerCase().includes(query))
+  if (!ps.length) {
+    list.innerHTML = `<div class="empty"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>${query?'Sin resultados':'Sin pacientes registrados'}</p></div>`; return
+  }
+  list.innerHTML = ps.map(p => {
+    const cnt  = DB.sessions.filter(s => s.patientId==p.id).length
+    const age  = calcAge(p.dob)
+    const ageChip   = age!==null ? `<span class="age-chip">${age} años</span>` : ''
+    const tipoBadge = `<span class="tipo-pac-badge ${p.tipo_pac||'particular'}">${p.tipo_pac==='derivado'?'🏥 Derivado':'👤 Particular'}</span>`
+    const meta = [p.rut,p.tel,p.email,p.notes].filter(Boolean).join(' · ')||'Sin datos adicionales'
+    return `<div class="pat-item" onclick="openPatModal(`${p.id}`)">
+      <div style="min-width:0;flex:1">
+        <div class="pat-name">${esc(p.name)}${ageChip}${tipoBadge}</div>
+        <div class="pat-meta">${esc(meta)}</div>
+        ${p.tipo_pac==='derivado'&&p.institucion?`<div style="font-size:.7rem;color:var(--muted)">Institución: ${esc(p.institucion)}</div>`:''}
+        <div class="pat-count"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>${cnt} sesiones</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+        <button class="btn-edit-pat" onclick="event.stopPropagation();openEditModal(`${p.id}`)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button>
+        <button class="btn-ghost-del" onclick="event.stopPropagation();delPaciente(`${p.id}`)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div>
+    </div>`
+  }).join('')
+}
+
+async function addPaciente() {
+  const name = document.getElementById('new-name').value.trim()
+  if (!name) { toast('Ingresa el nombre'); return }
+  const dob = document.getElementById('new-dob').value
+  if (!dob)  { toast('La fecha de nacimiento es obligatoria'); return }
+  const rutNuevo = document.getElementById('new-rut').value.trim()
+  if (rutNuevo) {
+    const rutLimpio = rutNuevo.replace(/[^0-9kK]/g,'').toUpperCase()
+    const duplicado = DB.patients.find(p => p.rut && p.rut.replace(/[^0-9kK]/g,'').toUpperCase() === rutLimpio)
+    if (duplicado) { toast('Ya existe un paciente con ese RUT: ' + duplicado.name); return }
+  }
+  const row = {
+    id: crypto.randomUUID(), name, rut: document.getElementById('new-rut').value.trim(),
+    dob, tel: document.getElementById('new-tel').value.trim(),
+    email: document.getElementById('new-email').value.trim(),
+    notes: document.getElementById('new-notes').value.trim(),
+    doctors: [...(window._newDoctors||[])],
+    tipo_pac: getTipoPac('new'),
+    institucion: getTipoPac('new')==='derivado' ? document.getElementById('new-institucion').value.trim() : '',
+    org_id: ORG_ID
+  }
+  DB.patients.unshift({...row}); CACHE.patients = DB.patients
+  window._newDoctors = []; renderDoctorList('new')
+  renderSelectPacientes(); renderPacientes()
+  ;['new-name','new-rut','new-dob','new-tel','new-email','new-notes','new-institucion'].forEach(id => { const el=document.getElementById(id); if(el) el.value='' })
+  setTipoPac('new','particular')
+  if (navigator.onLine) {
+    try { await sb.insert('patients', row); toast('✅ Paciente agregado') }
+    catch { queueOp('insert','patients',row.id,row); toast('✅ Guardado · Sin conexión') }
+  } else { queueOp('insert','patients',row.id,row); toast('✅ Guardado localmente') }
+}
+
+async function delPaciente(id) {
+  if (!confirm('¿Eliminar este paciente?')) return
+  DB.patients = DB.patients.filter(p => p.id!==id)
+  DB.sessions = DB.sessions.filter(s => s.patientId!==id)
+  CACHE.patients = DB.patients; CACHE.sessions = DB.sessions
+  renderSelectPacientes(); renderPacientes(); renderHistorial(); buildMesExport()
+  if (navigator.onLine) {
+    try { await sb.del('patients', id); toast('Paciente eliminado') }
+    catch { queueOp('delete','patients',id); toast('Eliminado · Sin conexión') }
+  } else { queueOp('delete','patients',id); toast('Eliminado localmente') }
+}
+
+// ══════ EDITAR PACIENTE ══════
+function openEditModal(id) {
+  const p = DB.patients.find(x => x.id===id); if (!p) return
+  document.getElementById('edit-id').value    = id
+  document.getElementById('edit-name').value  = p.name||''
+  document.getElementById('edit-rut').value   = p.rut||''
+  document.getElementById('edit-dob').value   = p.dob||''
+  document.getElementById('edit-tel').value   = p.tel||''
+  document.getElementById('edit-email').value = p.email||''
+  document.getElementById('edit-notes').value = p.notes||''
+  document.getElementById('edit-institucion').value = p.institucion||''
+  setTipoPac('edit', p.tipo_pac||'particular')
+  window._editDoctors = [...(p.doctors||[])]
+  renderDoctorList('edit'); populateSpecSelects()
+  document.getElementById('edit-modal-overlay').classList.add('open')
+}
+
+async function guardarEdicion() {
+  const id   = document.getElementById('edit-id').value
+  const name = document.getElementById('edit-name').value.trim()
+  if (!name) { toast('El nombre no puede estar vacío'); return }
+  const dob  = document.getElementById('edit-dob').value
+  if (!dob)  { toast('La fecha de nacimiento es obligatoria'); return }
+  const updated = {
+    name, rut: document.getElementById('edit-rut').value.trim(), dob,
+    tel: document.getElementById('edit-tel').value.trim(),
+    email: document.getElementById('edit-email').value.trim(),
+    notes: document.getElementById('edit-notes').value.trim(),
+    doctors: [...(window._editDoctors||[])],
+    tipo_pac: getTipoPac('edit'),
+    institucion: getTipoPac('edit')==='derivado' ? document.getElementById('edit-institucion').value.trim() : ''
+  }
+  const idx = DB.patients.findIndex(x => x.id===id)
+  if (idx!==-1) DB.patients[idx] = {...DB.patients[idx], ...updated}
+  CACHE.patients = DB.patients
+  document.getElementById('edit-modal-overlay').classList.remove('open')
+  renderSelectPacientes(); renderPacientes()
+  if (window._currentPatId===id) openPatModal(id)
+  if (navigator.onLine) {
+    try { await sb.update('patients', id, updated); toast('✅ Paciente actualizado') }
+    catch { queueOp('update','patients',id,{...updated,id}); toast('✅ Actualizado · Sin conexión') }
+  } else { queueOp('update','patients',id,{...updated,id}); toast('✅ Actualizado localmente') }
+}
+
+function closeEditModal(e) { if (e.target===document.getElementById('edit-modal-overlay')) document.getElementById('edit-modal-overlay').classList.remove('open') }
+
+// ══════ GUARDAR SESIÓN ══════
+async function guardarSesion() {
+  const pid = document.getElementById('sel-pac').value
+  if (!pid) { toast('Selecciona un paciente'); return }
+  const resumen = document.getElementById('inp-resumen').value.trim()
+  if (!resumen) { toast('Agrega un resumen'); return }
+  const fecha = document.getElementById('inp-fecha').value
+  const hora  = document.getElementById('inp-hora').value
+  if (!fecha||!hora) { toast('Completa fecha y hora'); return }
+  const patName = document.getElementById('sel-pac').options[document.getElementById('sel-pac').selectedIndex].text
+  const row = {
+    id: crypto.randomUUID(), patient_id: pid, patient_name: patName,
+    tipo: currentTipo,
+    direccion: currentTipo==='domicilio' ? document.getElementById('inp-dir').value.trim() : '',
+    fecha, hora, duracion: parseInt(document.getElementById('inp-dur').value),
+    resumen, zona: document.getElementById('inp-zona').value.trim(),
+    tecnicas: document.getElementById('inp-tecnicas').value.trim(),
+    proxima:  document.getElementById('inp-proxima').value.trim(),
+    org_id:   ORG_ID, created_by: currentUser||'Desconocido'
+  }
+  const local = { id:row.id, patientId:row.patient_id, patientName:row.patient_name, tipo:row.tipo,
+    direccion:row.direccion, fecha:row.fecha, hora:row.hora, duracion:row.duracion,
+    resumen:row.resumen, zona:row.zona, tecnicas:row.tecnicas, proxima:row.proxima, createdBy:row.created_by }
+  DB.sessions.unshift(local); CACHE.sessions = DB.sessions
+  resetForm(); renderHistorial(); buildMesExport()
+  if (navigator.onLine) {
+    try {
+      await sb.insert('sessions', row)
+      backupToSheets(local)
+      toast('✅ Sesión registrada y respaldada')
+    } catch { queueOp('insert','sessions',row.id,row); toast('✅ Guardada · Sin conexión') }
+  } else { queueOp('insert','sessions',row.id,row); toast('✅ Guardada localmente') }
+}
+
+function resetForm() {
+  document.getElementById('sel-pac').value = ''
+  ;['inp-resumen','inp-zona','inp-tecnicas','inp-proxima','inp-dir'].forEach(id => document.getElementById(id).value='')
+  setTipo('consulta')
+  const n = new Date()
+  document.getElementById('inp-fecha').value = n.toISOString().slice(0,10)
+  document.getElementById('inp-hora').value  = `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`
+}
+
+// ══════ GOOGLE SHEETS BACKUP ══════
+function backupToSheets(local) {
+  try {
+    const p = new URLSearchParams({
+      id:          String(local.id||''),
+      patientName: String(local.patientName||''),
+      fecha:       String(local.fecha||''),
+      hora:        String(local.hora||''),
+      duracion:    String(local.duracion||0),
+      tipo:        String(local.tipo||''),
+      direccion:   String(local.direccion||''),
+      resumen:     String(local.resumen||'').slice(0,150),
+      zona:        String(local.zona||''),
+      tecnicas:    String(local.tecnicas||''),
+      proxima:     String(local.proxima||'').slice(0,150),
+      createdBy:   String(local.createdBy||'')
+    })
+    const img = new Image()
+    img.src = SHEETS_URL + '?' + p.toString()
+    img.onerror = () => {}
+  } catch {}
+}
+
+// ══════ HISTORIAL ══════
+function setFiltro(f, btn) {
+  filtroActivo = f
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'))
+  btn.classList.add('active'); renderHistorial()
+}
+function fmtDate(str) { return new Date(str+'T12:00:00').toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short'}) }
+function fmtMonth(str) { const [y,m]=str.split('-'); return new Date(y,parseInt(m)-1,1).toLocaleDateString('es-CL',{month:'long',year:'numeric'}) }
+
+function renderHistorial() {
+  const container = document.getElementById('hist-list')
+  let ss = [...DB.sessions]
+  if (filtroActivo!=='todos') ss = ss.filter(s => s.tipo===filtroActivo)
+  if (!ss.length) { container.innerHTML=`<div class="empty"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p>Sin sesiones registradas</p></div>`; return }
+  const byMonth = {}
+  ss.forEach(s => { const [y,m]=s.fecha.split('-'); const k=`${y}-${m}`; if(!byMonth[k]) byMonth[k]=[]; byMonth[k].push(s) })
+  let html = ''
+  Object.keys(byMonth).sort().reverse().forEach(key => {
+    const g = byMonth[key]
+    const totalMin = g.reduce((a,s)=>a+s.duracion,0)
+    const label = fmtMonth(key+'-01')
+    html += `<div class="month-group"><div class="month-header">
+      <div class="month-label">${label}</div>
+      <div class="month-badges">
+        <span class="mbadge mbadge-green">${g.length} ses.</span>
+        <span class="mbadge mbadge-amber">${Math.round(totalMin/60*10)/10} hrs</span>
+      </div>
+    </div>`
+    g.forEach(s => {
+      html += `<button class="session-item ${s.tipo==='domicilio'?'dom':''}" onclick="openModal(${s.id})">
+        <div class="si-top"><div class="si-name">${esc(s.patientName)}</div><span class="si-badge ${s.tipo}">${s.tipo}</span></div>
+        <div class="si-meta">
+          <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${fmtDate(s.fecha)}</span>
+          <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${s.hora} · ${s.duracion} min</span>
+          ${s.direccion?`<span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(s.direccion)}</span>`:''}
+        </div>
+        <div class="si-summary">${esc(s.resumen)}</div>
+        ${s.createdBy?`<div class="audit-chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${esc(parseUserName(s.createdBy))}</div>`:''}
+      </button>`
+    })
+    html += '</div>'
+  })
+  container.innerHTML = html
+}
+
+// ══════ MODAL SESIÓN ══════
+function openModal(id) {
+  const s = DB.sessions.find(x => x.id===id); if (!s) return
+  const d = new Date(s.fecha+'T12:00:00')
+  document.getElementById('m-name').textContent = s.patientName
+  document.getElementById('m-meta').innerHTML =
+    `${d.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} · ${s.hora} · <strong>${s.duracion} min</strong>${s.createdBy?` · <span style="opacity:.7">por ${esc(parseUserName(s.createdBy))}</span>`:''}`
+  const tb = document.getElementById('m-tipo-badge')
+  tb.className = `modal-tipo-badge ${s.tipo}`
+  tb.innerHTML = s.tipo==='consulta'
+    ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Consulta`
+    : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Domicilio`
+  const addr = document.getElementById('m-address')
+  if (s.tipo==='domicilio'&&s.direccion) { addr.className='modal-address'; addr.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(s.direccion)}` }
+  else { addr.className=''; addr.innerHTML='' }
+  ;[['mf-resumen','Resumen',s.resumen],['mf-zona','Zona / Diagnóstico',s.zona],['mf-tecnicas','Técnicas',s.tecnicas],['mf-proxima','Próxima sesión',s.proxima]].forEach(([id,label,val]) => {
+    const el = document.getElementById(id)
+    el.innerHTML = val ? `<label>${label}</label><p>${esc(val)}</p>` : ''
+  })
+  document.getElementById('m-del-btn').onclick = () => delSession(id)
+  document.getElementById('modal-overlay').classList.add('open')
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open') }
+function closeModalOverlay(e) { if (e.target===document.getElementById('modal-overlay')) closeModal() }
+
+async function delSession(id) {
+  if (!confirm('¿Eliminar esta sesión?')) return
+  DB.sessions = DB.sessions.filter(s => s.id!==id); CACHE.sessions = DB.sessions
+  closeModal(); renderHistorial(); buildMesExport()
+  if (navigator.onLine) {
+    try { await sb.del('sessions', id); toast('Sesión eliminada') }
+    catch { queueOp('delete','sessions',id); toast('Eliminada localmente') }
+  } else { queueOp('delete','sessions',id); toast('Eliminada localmente') }
+}
+
+// ══════ MODAL PACIENTE ══════
+function openPatModal(id) {
+  const p = DB.patients.find(x => x.id===id); if (!p) return
+  const ss = DB.sessions.filter(s => s.patientId==id).sort((a,b) => new Date(b.fecha+'T'+b.hora)-new Date(a.fecha+'T'+a.hora))
+  document.getElementById('pm-name').textContent = p.name
+  const age    = calcAge(p.dob)
+  const dobStr = p.dob ? new Date(p.dob+'T12:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'})+(age!==null?' · '+age+' años':'') : null
+  const tipoPacStr = p.tipo_pac==='derivado' ? '🏥 Derivado'+(p.institucion?' — '+p.institucion:'') : '👤 Particular'
+  document.getElementById('pm-meta').textContent = [p.rut,dobStr,p.tel,p.email,tipoPacStr,p.notes].filter(Boolean).join(' · ')||'Sin datos'
+  const totalMin = ss.reduce((a,s)=>a+s.duracion,0)
+  const consultas = ss.filter(s=>s.tipo==='consulta').length
+  const domicilios = ss.filter(s=>s.tipo==='domicilio').length
+  const oldDoc = document.querySelector('#pm-stats + .pm-doctors'); if(oldDoc) oldDoc.remove()
+  document.getElementById('pm-stats').innerHTML = `
+    <div class="pat-stat"><div class="pat-stat-num">${ss.length}</div><div class="pat-stat-label">Sesiones</div></div>
+    <div class="pat-stat"><div class="pat-stat-num">${Math.round(totalMin/60*10)/10}</div><div class="pat-stat-label">Horas</div></div>
+    <div class="pat-stat"><div class="pat-stat-num">${consultas}</div><div class="pat-stat-label">Consulta</div></div>
+    <div class="pat-stat"><div class="pat-stat-num">${domicilios}</div><div class="pat-stat-label">Domicilio</div></div>`
+  if (p.doctors&&p.doctors.length) {
+    document.getElementById('pm-stats').insertAdjacentHTML('afterend',
+      `<div class="pm-doctors"><div class="pm-doctors-title">Médicos tratantes</div><div>${p.doctors.map(d=>`<span class="pm-doctor-chip">${esc(d.name)} · <span style="opacity:.65">${esc(d.spec)}</span></span>`).join('')}</div></div>`)
+  }
+  if (!ss.length) { document.getElementById('pm-sessions').innerHTML='<div class="empty" style="padding:24px 0"><p>Sin sesiones</p></div>'; }
+  else {
+    const byMonth = {}
+    ss.forEach(s => { const [y,m]=s.fecha.split('-'); const k=y+'-'+m; if(!byMonth[k]) byMonth[k]=[]; byMonth[k].push(s) })
+    let html = ''
+    Object.keys(byMonth).sort().reverse().forEach(key => {
+      const [y,m] = key.split('-')
+      const label = new Date(y,parseInt(m)-1,1).toLocaleDateString('es-CL',{month:'long',year:'numeric'})
+      html += `<div style="font-size:.72rem;font-weight:600;text-transform:capitalize;color:var(--muted);margin:12px 0 8px">${label}</div>`
+      byMonth[key].forEach(s => {
+        const d = new Date(s.fecha+'T12:00:00')
+        const dayStr = d.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})
+        html += `<div class="pat-sess-item ${s.tipo==='domicilio'?'dom':''}">
+          <div class="pat-sess-top">
+            <div class="pat-sess-date"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${dayStr}</div>
+            <span class="pat-sess-badge ${s.tipo}">${s.tipo}</span>
+          </div>
+          <div class="pat-sess-info">
+            <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${s.hora} · ${s.duracion} min</span>
+            ${s.direccion?`<span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>${esc(s.direccion)}</span>`:''}
+          </div>
+          ${s.resumen?`<div class="pat-sess-summary">${esc(s.resumen)}</div>`:''}
+        </div>`
+      })
+    })
+    document.getElementById('pm-sessions').innerHTML = html
+  }
+  window._currentPatId = id
+  document.getElementById('pat-modal-overlay').classList.add('open')
+}
+function closePatModal(e) { if(e.target===document.getElementById('pat-modal-overlay')) document.getElementById('pat-modal-overlay').classList.remove('open') }
+
+// ══════ EXPORT EXCEL ══════
+function buildMesExport() {
+  const sel = document.getElementById('sel-mes-export')
+  const meses = new Set()
+  DB.sessions.forEach(s => { const [y,m]=s.fecha.split('-'); meses.add(`${y}-${m}`) })
+  const cur = sel.value; sel.innerHTML = '<option value="todos">Todos los meses</option>'
+  ;[...meses].sort().reverse().forEach(k => {
+    const label = fmtMonth(k+'-01')
+    sel.innerHTML += `<option value="${k}">${label.charAt(0).toUpperCase()+label.slice(1)}</option>`
+  })
+  if (cur) sel.value = cur
+}
+
+function exportarExcel() {
+  let ss = [...DB.sessions]
+  const mesVal = document.getElementById('sel-mes-export').value
+  if (mesVal!=='todos') ss = ss.filter(s => { const [y,m]=s.fecha.split('-'); return `${y}-${m}`===mesVal })
+  if (!ss.length) { toast('No hay sesiones para exportar'); return }
+  const detalle = ss.map(s => ({
+    'Paciente':s.patientName,'Fecha':s.fecha,'Hora':s.hora,'Duración (min)':s.duracion,
+    'Horas':Math.round(s.duracion/60*100)/100,'Tipo':s.tipo,'Dirección':s.direccion||'—',
+    'Resumen':s.resumen,'Zona':s.zona||'—','Técnicas':s.tecnicas||'—',
+    'Próxima sesión':s.proxima||'—','Registrado por':parseUserName(s.createdBy)||'—'
+  }))
+  const porPac = {}
+  ss.forEach(s => { if(!porPac[s.patientName]) porPac[s.patientName]={ses:0,min:0,c:0,d:0}; porPac[s.patientName].ses++; porPac[s.patientName].min+=s.duracion; porPac[s.patientName][s.tipo==='consulta'?'c':'d']++ })
+  const resumenPac = Object.entries(porPac).map(([n,v]) => ({'Paciente':n,'Nº sesiones':v.ses,'Total horas':Math.round(v.min/60*100)/100,'Consultas':v.c,'Domicilios':v.d}))
+  const porMes = {}
+  ss.forEach(s => { const [y,m]=s.fecha.split('-'); const k=`${y}-${m}`; if(!porMes[k]) porMes[k]={mes:fmtMonth(k+'-01'),ses:0,min:0,c:0,d:0}; porMes[k].ses++; porMes[k].min+=s.duracion; porMes[k][s.tipo==='consulta'?'c':'d']++ })
+  const resumenMes = Object.values(porMes).map(v => ({'Mes':v.mes,'Nº sesiones':v.ses,'Total horas':Math.round(v.min/60*100)/100,'Consultas':v.c,'Domicilios':v.d}))
+  const wb = XLSX.utils.book_new()
+  const ws1 = XLSX.utils.json_to_sheet(detalle); ws1['!cols']=[{wch:24},{wch:12},{wch:10},{wch:14},{wch:8},{wch:12},{wch:34},{wch:44},{wch:26},{wch:28},{wch:36},{wch:16}]
+  XLSX.utils.book_append_sheet(wb,ws1,'Sesiones')
+  const ws2 = XLSX.utils.json_to_sheet(resumenPac); ws2['!cols']=[{wch:26},{wch:12},{wch:12},{wch:12},{wch:12}]
+  XLSX.utils.book_append_sheet(wb,ws2,'Por paciente')
+  const ws3 = XLSX.utils.json_to_sheet(resumenMes); ws3['!cols']=[{wch:22},{wch:12},{wch:12},{wch:12},{wch:12}]
+  XLSX.utils.book_append_sheet(wb,ws3,'Resumen mensual')
+  XLSX.writeFile(wb, `kine_sesiones_${mesVal==='todos'?'completo':mesVal}.xlsx`)
+  toast('📊 Excel descargado')
+}
+
+// ══════ DOCTORS ══════
+window._newDoctors  = []
+window._editDoctors = []
+
+function populateSpecSelects() {
+  ;['new-doc-spec','edit-doc-spec'].forEach(selId => {
+    const sel = document.getElementById(selId); if (!sel) return
+    sel.innerHTML = '<option value="">Especialidad</option>' + ESPECIALIDADES.map(e=>`<option value="${e}">${e}</option>`).join('')
+  })
+}
+
+function renderDoctorList(prefix) {
+  const arr  = prefix==='new' ? window._newDoctors : window._editDoctors
+  const list = document.getElementById(prefix+'-doctors-list'); if (!list) return
+  if (!arr.length) { list.innerHTML=''; return }
+  list.innerHTML = arr.map((d,i) => `<div class="doctor-tag">
+    <div><div class="doctor-tag-name">${esc(d.name)}</div><div class="doctor-tag-spec">${esc(d.spec)}</div></div>
+    <button class="doctor-tag-del" onclick="removeDoctorFromForm('${prefix}',${i})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>`).join('')
+}
+
+function addDoctorToForm(prefix) {
+  const nameEl = document.getElementById(prefix+'-doc-name')
+  const specEl = document.getElementById(prefix+'-doc-spec')
+  const name = nameEl.value.trim(), spec = specEl.value
+  if (!name) { toast('Ingresa el nombre del médico'); nameEl.focus(); return }
+  if (!spec) { toast('Selecciona la especialidad'); specEl.focus(); return }
+  const arr = prefix==='new' ? window._newDoctors : window._editDoctors
+  arr.push({name,spec}); nameEl.value=''; specEl.value=''
+  renderDoctorList(prefix)
+}
+
+function removeDoctorFromForm(prefix, idx) {
+  const arr = prefix==='new' ? window._newDoctors : window._editDoctors
+  arr.splice(idx,1); renderDoctorList(prefix)
+}
+
+// ══════ RUT ══════
+function formatRut(input) {
+  let val = input.value.replace(/[^0-9kK]/g,'').toUpperCase()
+  if (!val.length) { input.value=''; return }
+  const dv = val.slice(-1), num = val.slice(0,-1)
+  if (!num.length) { input.value=dv; return }
+  input.value = num.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+'-'+dv
+  if (val.length>=7) {
+    const valid = validarRut(val)
+    input.style.borderColor = valid ? 'var(--primary)' : 'var(--destructive)'
+    input.style.boxShadow   = valid ? '0 0 0 3px var(--primary-10)' : '0 0 0 3px oklch(0.55 0.20 25/.12)'
+  } else { input.style.borderColor=''; input.style.boxShadow='' }
+}
+
+function validarRut(rut) {
+  const clean = rut.replace(/[^0-9kK]/g,'').toUpperCase()
+  if (clean.length<2) return false
+  const dv=clean.slice(-1), num=clean.slice(0,-1)
+  if (!/^[0-9]+$/.test(num)) return false
+  let sum=0,mul=2
+  for (let i=num.length-1;i>=0;i--) { sum+=parseInt(num[i])*mul; mul=mul===7?2:mul+1 }
+  const exp = 11-(sum%11)
+  return dv===(exp===11?'0':exp===10?'K':String(exp))
+}
+
+;['new-rut','edit-rut'].forEach(id => {
+  const el = document.getElementById(id)
+  if (el) el.addEventListener('paste', () => setTimeout(()=>formatRut(el),10))
+})
+
+// ══════ PDF ══════
+function descargarFichaPDF() {
+  const id = window._currentPatId
+  const p  = DB.patients.find(x => x.id===id); if (!p) return
+  const {jsPDF} = window.jspdf
+  const doc = new jsPDF({unit:'mm',format:'a4'})
+  const W=210,margin=20,colW=W-margin*2
+  let y=0
+  const addPage = ()=>{ doc.addPage(); y=20 }
+  const checkY = n=>{ if(y+n>270) addPage() }
+  const PRIMARY=[45,110,95],MUTED=[120,130,126],FG=[30,42,38],BG=[248,250,249],AMBER=[180,110,20]
+
+  doc.setFillColor(...PRIMARY); doc.rect(0,0,W,38,'F')
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(18)
+  doc.text('Kinesiología A&G',margin,16)
+  doc.setFont('helvetica','normal'); doc.setFontSize(9)
+  doc.text('Ficha Clínica del Paciente',margin,23)
+  doc.text('Generada: '+new Date().toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'}),margin,29)
+  doc.setFillColor(255,255,255); doc.circle(W-margin-10,19,10,'F')
+  doc.setTextColor(...PRIMARY); doc.setFont('helvetica','bold'); doc.setFontSize(11)
+  doc.text(p.name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(),W-margin-10,21,{align:'center'})
+  y=48
+
+  doc.setFillColor(...BG); doc.roundedRect(margin,y,colW,38,3,3,'F')
+  doc.setDrawColor(220,228,224); doc.setLineWidth(0.3); doc.roundedRect(margin,y,colW,38,3,3,'S')
+  doc.setTextColor(...FG); doc.setFont('helvetica','bold'); doc.setFontSize(13)
+  doc.text(p.name,margin+6,y+10)
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED)
+  const infoRow=[p.rut&&'RUT: '+p.rut,p.tel&&'Tel: '+p.tel,p.email&&p.email].filter(Boolean)
+  if (infoRow.length) doc.text(infoRow.join('   |   '),margin+6,y+18)
+  const tipoPacStr = p.tipo_pac==='derivado'?'Derivado'+(p.institucion?' — '+p.institucion:''):'Particular'
+  doc.setTextColor(...FG); doc.setFontSize(8.5)
+  if (p.notes) { const nl=doc.splitTextToSize('Notas: '+p.notes+' · '+tipoPacStr,colW-12); doc.text(nl,margin+6,y+26) }
+  else doc.text(tipoPacStr,margin+6,y+26)
+  y+=46
+
+  const ss = DB.sessions.filter(s=>s.patientId==id).sort((a,b)=>new Date(b.fecha+'T'+b.hora)-new Date(a.fecha+'T'+a.hora))
+  const totalMin=ss.reduce((a,s)=>a+s.duracion,0)
+  const stats=[{l:'Total sesiones',v:String(ss.length)},{l:'Horas atendidas',v:String(Math.round(totalMin/60*10)/10)},{l:'En consulta',v:String(ss.filter(s=>s.tipo==='consulta').length)},{l:'A domicilio',v:String(ss.filter(s=>s.tipo==='domicilio').length)}]
+  const sw=colW/4
+  stats.forEach((st,i)=>{
+    const x=margin+i*sw
+    doc.setFillColor(...BG); doc.roundedRect(x,y,sw-2,22,2,2,'F')
+    doc.setDrawColor(220,228,224); doc.roundedRect(x,y,sw-2,22,2,2,'S')
+    doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(...PRIMARY)
+    doc.text(st.v,x+(sw-2)/2,y+11,{align:'center'})
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...MUTED)
+    doc.text(st.l,x+(sw-2)/2,y+17,{align:'center'})
+  })
+  y+=30
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...PRIMARY)
+  doc.text('HISTORIAL DE SESIONES',margin,y)
+  doc.setDrawColor(...PRIMARY); doc.setLineWidth(0.5); doc.line(margin,y+2,margin+colW,y+2); y+=8
+
+  const byMonth={}
+  ss.forEach(s=>{ const [yr,mo]=s.fecha.split('-'); const k=yr+'-'+mo; if(!byMonth[k]) byMonth[k]=[]; byMonth[k].push(s) })
+  Object.keys(byMonth).sort().reverse().forEach(key=>{
+    const [yr,mo]=key.split('-')
+    const mLabel=new Date(Number(yr),parseInt(mo)-1,1).toLocaleDateString('es-CL',{month:'long',year:'numeric'})
+    checkY(12); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...MUTED)
+    doc.text(mLabel.charAt(0).toUpperCase()+mLabel.slice(1),margin,y); y+=6
+    byMonth[key].forEach(s=>{
+      const rowH=s.resumen?28:20; checkY(rowH+4)
+      const isC=s.tipo==='consulta'
+      doc.setFillColor(...BG); doc.roundedRect(margin,y,colW,rowH,2,2,'F')
+      doc.setFillColor(...(isC?PRIMARY:AMBER)); doc.roundedRect(margin,y,3,rowH,1,1,'F')
+      const d2=new Date(s.fecha+'T12:00:00')
+      const dayStr=d2.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})
+      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...FG)
+      doc.text(dayStr.charAt(0).toUpperCase()+dayStr.slice(1),margin+8,y+8)
+      doc.setFillColor(...(isC?[228,243,239]:[253,243,226])); doc.roundedRect(W-margin-28,y+3,26,7,2,2,'F')
+      doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...(isC?PRIMARY:AMBER))
+      doc.text(isC?'CONSULTA':'DOMICILIO',W-margin-15,y+8,{align:'center'})
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...MUTED)
+      let metaStr=s.hora+' · '+s.duracion+' min'+(s.direccion?' · '+s.direccion:'')+(s.createdBy?' · por '+parseUserName(s.createdBy):'')
+      doc.text(metaStr,margin+8,y+15)
+      if (s.resumen) { doc.setTextColor(...FG); const lines=doc.splitTextToSize(s.resumen,colW-16); doc.text(lines.slice(0,2),margin+8,y+22) }
+      y+=rowH+3
+    })
+    y+=4
+  })
+
+  const pageCount=doc.internal.getNumberOfPages()
+  for(let i=1;i<=pageCount;i++){
+    doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...MUTED)
+    doc.text('Kinesiología A&G · Página '+i+' de '+pageCount,W/2,290,{align:'center'})
+  }
+  doc.save('ficha_'+p.name.replace(/ /g,'_')+'.pdf')
+  toast('📄 Ficha descargada')
+}
+</script>
+</body>
+</html>
