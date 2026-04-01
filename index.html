@@ -413,6 +413,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--fg);min-hei
     <button class="chip" onclick="setFiltro('consulta',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Consulta</button>
     <button class="chip" onclick="setFiltro('domicilio',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Domicilio</button>
   </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <div style="position:relative;flex:1">
+      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--muted);pointer-events:none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="pat-search" id="hist-search-name" placeholder="Buscar paciente..." style="padding-left:32px" oninput="renderHistorial()" />
+    </div>
+    <input class="input" id="hist-search-fecha" type="date" style="width:auto;min-width:130px" onchange="renderHistorial()" title="Filtrar por fecha" />
+  </div>
   <div id="hist-list"></div>
 </div>
 
@@ -1036,6 +1043,10 @@ function renderHistorial() {
   const container = document.getElementById('hist-list')
   let ss = [...DB.sessions]
   if (filtroActivo!=='todos') ss = ss.filter(s => s.tipo===filtroActivo)
+  const searchName = (document.getElementById('hist-search-name')?.value||'').toLowerCase().trim()
+  const searchFecha = document.getElementById('hist-search-fecha')?.value||''
+  if (searchName) ss = ss.filter(s => (s.patientName||'').toLowerCase().includes(searchName))
+  if (searchFecha) ss = ss.filter(s => s.fecha === searchFecha)
   if (!ss.length) { container.innerHTML=`<div class="empty"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p>Sin sesiones registradas</p></div>`; return }
   const byMonth = {}
   ss.forEach(s => { const [y,m]=s.fecha.split('-'); const k=`${y}-${m}`; if(!byMonth[k]) byMonth[k]=[]; byMonth[k].push(s) })
@@ -1052,7 +1063,7 @@ function renderHistorial() {
       </div>
     </div>`
     g.forEach(s => {
-      html += `<button class="session-item ${s.tipo==='domicilio'?'dom':''}" onclick="openModal(${s.id})">
+      html += `<button class="session-item ${s.tipo==='domicilio'?'dom':''}" data-sid="${s.id}">
         <div class="si-top"><div class="si-name">${esc(s.patientName)}</div><span class="si-badge ${s.tipo}">${s.tipo}</span></div>
         <div class="si-meta">
           <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${fmtDate(s.fecha)}</span>
@@ -1378,7 +1389,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var ubtnAle = document.getElementById('ubtn-ale');
   if (ubtnAle) ubtnAle.addEventListener('click', function(){ selectUser('Alejandra', this); });
 
-  // Event delegation for patient list
+  // Event delegation for patient list and session list
   document.addEventListener('click', function(e) {
     var delBtn = e.target.closest('[data-del-id]');
     if (delBtn) { e.stopPropagation(); delPaciente(delBtn.dataset.delId); return; }
@@ -1386,6 +1397,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (editBtn) { e.stopPropagation(); openEditModal(editBtn.dataset.editId); return; }
     var patItem = e.target.closest('[data-pid]');
     if (patItem) { openPatModal(patItem.dataset.pid); return; }
+    var sesItem = e.target.closest('[data-sid]');
+    if (sesItem) { openModal(sesItem.dataset.sid); return; }
   });
 });
 
